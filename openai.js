@@ -1,5 +1,5 @@
 const defaultAIModelName = "gpt-3.5-turbo";
-const defaultMaxTokens = 1000;
+const defaultMaxTokens = 500;
 const defaultTemperature = 0;
 
 async function streamAnswer({
@@ -62,10 +62,10 @@ async function streamAnswer({
       }
 
       const sseString = decoder.decode(value);
-      if (sseString.includes("data: [DONE]")) break;
+
       const sseArray = sseString
         .split("\n")
-        .filter((line) => line.startsWith("data:"))
+        .filter((line) => line.startsWith("data:") && line !== "data: [DONE]")
         .map((line) => JSON.parse(line.substring(6).trim()));
 
       const partialTex = sseArray
@@ -86,6 +86,9 @@ async function streamAnswer({
       fullAnswer += partialTex;
       if (onPartialResponse) {
         onPartialResponse(partialTex);
+      }
+      if (sseString.includes("data: [DONE]")) {
+        break;
       }
     }
     fullAnswer = fullAnswer == "" ? null : fullAnswer;

@@ -4,34 +4,37 @@ const systemPrompt = `
 Ти розмовляєш з п'ятирічною дитиною.
 Ти загудуєш загадку, а дитина намагається її відгадати.
 Всі твої відповіді повинні бути короткими і простими.
-Ти завжди викликаеш функцію talk_and_listen коли потрібно відповісти.
+
+Як відповідь ти використовуєш ТІЛЬКИ функції talk_and_listen, get_random_riddle, exit.
+Ти завжди викликаеш функцію talk_and_listen коли потрібно відповісти користувачу.
+Ця функція також повертає текст того, що каже користувач.
 Коли я говорю "ти кажеш" - це означає, що ти викликаєш функцію talk_and_listen.
 
-Всі твої відповіді будут синтезувати голосове повідомлення шляхом виклику функції talk_and_listen.
-Ця функція також повертає текст того, що каже дитина.
 Якщо тобі потрібна нова загадка викликаєш функцію get_random_riddle.
-Не вигадуй загадки самостійно, використовуй тільки ті, що дає тобі get_random_riddle.
+Не вигадуй загадки, а використовуй тільки ті, що вертає тобі get_random_riddle.
+Якщо користувач більше не хоче продовжувати грати, ти викликаєш функцію exit.
+Якщо ніяка функція не викликається - це буде означати кінець розмови.
 
-Твоїм першим повідомленням ти викликаеш talk_and_listen з параметром text: 
+Твоїм першим повідомленням є виклик talk_and_listen з параметром text: 
 'Привіт! Я робот Марічка. Я знаю багато загадок. Скажи "Так", якщо хочеш зіграти зі мною'.
 
-Якщо дитина каже щось відмінне від "Так", ти кажеш щось із списку:
+Якщо користувач каже щось відмінне від "Так", ти кажеш щось із списку (викликай talk_and_listen):
 'Скажи "Так", якщо хочеш зіграти зі мною', 'Не зрозуміла. Ти будеш грати?', 'Просто скажи "Так" якщо хочеш зіграти'.
-Поки дитина не скаже "Так".
+Поки користувач не скаже "Так".
 
-Коли дитина згодна і каже "Так", ти викликаеш get_random_riddle. 
+Коли користувач погоджується відгадувати наступну загадку, ти викликаеш get_random_riddle. 
 У результаті виклику ти отримуєш загадку і відповідь.
 
-Потім ти викликаеш talk_and_listen з параметром text: 
+Потім ти кажеш (викликай talk_and_listen): 
 'Добре. Тоді слухай уважно мою загадку: {текст загадки}'
 
-Якщо дитина не вгадує, ти кажеш тільки "Ні". 
-Ти можеш запропонувати підказку після п'яти невірних відповідей.
-Якщо дитина вгадує, ти говориш одну із похвал:
-"Молодець!", "Вірно!", "Ти вгадав!", "Класс!", "Точно!".
-Після цього ти додаєш: "Хочеш ще?". 
-Якщо дитина каже "Так", гра продовжується.
-Якщо дитина каже "Ні" кажеш "Гарно пограли! Тоді пока!".
+Якщо користувач не вгадує ти кажеш тільки "Ні" (викликай talk_and_listen). 
+Ти запропонуваєш підказку після п'яти невірних відповідей.
+Якщо користувач вгадує відповідь, ти говориш одну із похвал (викликай talk_and_listen):
+"Молодець!", "Вірно!", "Ти вгадав!", "Класс!", "Точно!" і додаєш: "Хочеш ще?".
+
+Якщо користувач каже "Так", гра продовжується.
+Якщо користувач не хоче більше грати, ти викликаєш функцію exit.
 
 Твоїм першим повідомленням ти викликаеш talk_and_listen з параметром text: 
 'Привіт! Я робот Марічка. Я знаю багато загадок. Скажи "Так", якщо хочеш зіграти зі мною'.
@@ -44,26 +47,36 @@ const functions = [
     parameters: {
       type: "object",
       properties: {
-        random: {
-          type: "integer",
-          description: "Random number from 0 to 100",
+        dummy: {
+          type: "null",
         },
       },
     },
   },
   {
     name: "talk_and_listen",
-    description:
-      "Generate speach from text and listen for user's response. Use it always, except when get_random_riddle is called",
+    description: "Provide text to user and return user's response.",
     parameters: {
       type: "object",
       properties: {
         text: {
           type: "string",
-          description: "Text that should be synthesed",
+          description: "Text that should be said to user.",
         },
       },
       required: ["text"],
+    },
+  },
+  {
+    name: "exit",
+    description: "Call this function to exit conversation.",
+    parameters: {
+      type: "object",
+      properties: {
+        dummy: {
+          type: "null",
+        },
+      },
     },
   },
 ];
@@ -83,6 +96,8 @@ async function runConversation() {
   const secretKey = await getOpenAiSecretKey();
   const messages = [{ role: "system", content: systemPrompt }];
 
+  document.getElementById("aiMessageLabel").innerText = "Думаю...";
+
   let responseMessage = await streamAnswer({
     messages,
     functions,
@@ -97,11 +112,23 @@ async function runConversation() {
         talk_and_listen,
       };
       const functionName = responseMessage.function_call.name;
+      if (functionName == "exit") {
+        document.getElementById("aiMessageLabel").innerText = "До зустрічі!";
+        return "Conversation is over.";
+      }
       const functionToCall = availableFunctions[functionName];
       const functionArgument = JSON.parse(
         responseMessage.function_call.arguments
       );
+
+      if (functionToCall === talk_and_listen) {
+        const input = document.getElementById("textInput");
+        input.style.display = "block";
+        input.focus();
+      }
       const functionResponse = await functionToCall(functionArgument);
+      document.getElementById("textInput").style.display = "none";
+      document.getElementById("aiMessageLabel").innerText = "Думаю...";
 
       messages.push(responseMessage);
       messages.push({
@@ -109,13 +136,14 @@ async function runConversation() {
         name: functionName,
         content: functionResponse,
       });
+
       responseMessage = await streamAnswer({
         messages,
         functions,
         secretKey,
       });
     } else {
-      return "Conversation is over.";
+      return "Error: no function call. Conversation is over.";
     }
   }
 }
