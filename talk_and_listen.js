@@ -1,6 +1,6 @@
 async function talk_and_listen({ text }) {
   const inputElement = document.getElementById("textInput");
-  const labelElement = document.getElementById("textLabel");
+  const labelElement = document.getElementById("aiMessageLabel");
 
   labelElement.innerText = text;
 

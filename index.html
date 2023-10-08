@@ -33,12 +33,22 @@
     color: black;
     border: 1px solid #4CAF50;
   }
+  .input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 80vh;
+  }
+  #textInput {
+    display: none;
+  }
 </style>
 </head>
 <body>
-  <button id="startButton" onclick="startButtonClick()">Жмакни мене</button>
+  <button id="startButton" onclick="startButtonClick()">Нажми мене</button>
   <div class="input-container">
-    <label id="textLabel" for="textInput">AI</label>
+    <label id="aiMessageLabel" for="textInput"></label>
+    <br>
     <input id="textInput" type="text" />
   </div>
   <script src="index.js"></script>
