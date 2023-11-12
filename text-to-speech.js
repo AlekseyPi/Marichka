@@ -1,17 +1,35 @@
+async function getElevenLabsApiKey() {
+  let apiKey = localStorage.getItem("xiApiKey");
+  if (!apiKey) {
+    apiKey = prompt("Please enter your ElevenLabs API key.");
+    localStorage.setItem("xiApiKey", apiKey);
+  }
+  return apiKey;
+}
+
 async function fetchSpeechAudio(text) {
-  const apiKey = await getOpenAiSecretKey();
-  const response = await fetch("https://api.openai.com/v1/audio/speech", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "tts-1",
-      input: text,
-      voice: "nova",
-    }),
-  });
+  const apiKey = await getElevenLabsApiKey();
+  const response = await fetch(
+    "https://api.elevenlabs.io/v1/text-to-speech/UKCPU7dPRkILl78Hmi5S/stream",
+    {
+      method: "POST",
+      headers: {
+        accept: "audio/mpeg",
+        "xi-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: "eleven_multilingual_v2",
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.63,
+          style: 0.69,
+          use_speaker_boost: true,
+        },
+      }),
+    }
+  );
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -30,15 +48,4 @@ async function convertToSpeech() {
   } catch (error) {
     console.error("Error fetching speech audio:", error);
   }
-}
-
-async function getOpenAiSecretKey() {
-  let openaiSecretKey = localStorage.getItem("openaiSecretKey");
-  if (!openaiSecretKey) {
-    openaiSecretKey = prompt(
-      "Please enter your OpenAI secret key. You can activate the OpenAI paid plan here: https://platform.openai.com/account/billing/overview. Then, you can generate an OpenAI secret key on this page: https://platform.openai.com/account/api-keys, and provide it here."
-    );
-    localStorage.setItem("openaiSecretKey", openaiSecretKey);
-  }
-  return openaiSecretKey;
 }
