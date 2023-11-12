@@ -39,6 +39,7 @@ http
   })
   .listen(3001, () => {
     console.log("Server started on http://localhost:3001");
-    console.log("http://localhost:3001/silence-detector-processor.js");
     console.log("http://localhost:3001/speech-to-text.html");
+    console.log("http://localhost:3001/text-to-speech.html");
+    console.log("http://localhost:3001/index.html");
   });
