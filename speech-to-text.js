@@ -1,6 +1,6 @@
-const MIN_RECORDING_DURATION = 3000; // Minimum recording duration in milliseconds
+const MIN_RECORDING_DURATION = 1000; // Minimum recording duration in milliseconds
 const MAX_RECORDING_DURATION = 10000; // Maximum recording duration in milliseconds
-const SILENCE_DETECTION_TIMEOUT = 2000; // Timeout for silence detection in milliseconds
+const SILENCE_DETECTION_TIMEOUT = 1500; // Timeout for silence detection in milliseconds
 
 document.addEventListener("DOMContentLoaded", startRecording);
 
@@ -82,6 +82,7 @@ async function sendToOpenAI(audioBlob) {
   const formData = new FormData();
   formData.append("file", audioBlob);
   formData.append("model", "whisper-1");
+  formData.append("language", "uk");
 
   fetch("https://api.openai.com/v1/audio/transcriptions", {
     method: "POST",
