@@ -3,7 +3,7 @@ let riddles = null;
 async function fetchRiddles() {
   try {
     const response = await fetch(
-      "https://raw.githubusercontent.com/AlekseyPi/Marichka/main/riddles.txt"
+      "https://raw.githubusercontent.com/oleksii-pi/Marichka/main/riddles.txt"
     );
     const text = await response.text();
     return text.split("* * *").map((riddle) => riddle.trim());
